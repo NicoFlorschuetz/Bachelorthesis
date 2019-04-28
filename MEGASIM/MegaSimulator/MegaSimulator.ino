@@ -14,16 +14,28 @@ class Simulator {
     };
 
     void setup() {
+      Wire.begin();
       Serial.begin(9600);
       while (!Serial);
       Serial.println("Setup begin");
       pinMode(LEDreset, OUTPUT);
       pinMode(LEDpower, OUTPUT);
       Serial.println("Setup end");
+      Wire.beginTransmission( 9 ); // transmit to device #9
+      Wire.write(1); // sends x
+      Wire.endTransmission(); // stop transmitting
     };
 
 
     void loop() {
+      Wire.requestFrom(9, 9);
+      delay(1000);
+      while (Wire.available()) {
+        char antwort = Wire.read();
+        Serial.print(antwort);
+      }
+      Serial.print("\n");
+
       if (Serial.available()) {
         Message = Serial.readString();
         Message.trim();
@@ -36,7 +48,7 @@ class Simulator {
         }
         Serial.println("I received: " + Message );
       }
-      
+
 
       if (reset) {
         Serial.println("reset start");
@@ -55,7 +67,7 @@ class Simulator {
         reset = false;
 
       }
-      
+
     };
 
 };
