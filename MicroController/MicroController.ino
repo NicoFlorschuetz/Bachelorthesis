@@ -6,7 +6,7 @@ boolean ready = false;
 unsigned long int startTime = 0;
 unsigned long int interval = 1000;
 boolean state = false;
-String Fehlermeldung;
+int Fehlermeldung;
 
 
 
@@ -17,22 +17,27 @@ class Pins {
     int MegaSim1 = 5;
     int MegaSim2 = 6;
     int licht = 12;
+    //int Pin_ID[];
     String incomingMessage;
-    boolean resetARD, power;
     boolean resetStatus = false;
 
 
 
+
   public:
+    int Fehlercode = 0;
+    int ID[3];
     int keep_alive, resetLED, sign, powerOnOff;
-    Pins (int x , int y , int z ,   boolean ARD) {
+    Pins (int x , int y , int z, int id[3] ) {
       keep_alive = x;
       resetLED = y;
       powerOnOff = z;
-      resetARD = ARD;
+      memcpy(ID, id, sizeof(ID));
+
+
     };
 
-    void setup() {
+    void first_setup() {
       pinMode(licht, OUTPUT);
       pinMode(keep_alive, OUTPUT);
       pinMode(resetLED, OUTPUT);
@@ -40,7 +45,6 @@ class Pins {
       pinMode(MegaSim2, INPUT);
       pinMode(powerOnOff, OUTPUT);
       digitalWrite(licht, HIGH);
-
     };
 
     static void receiveEvent( int bytes )
@@ -53,15 +57,17 @@ class Pins {
       }
     };
 
-    void loop() {
+    void first_loop() {
       int reading = analogRead(A0);
       int realValue = map(reading, 0, 1043, 0, 100);
       if (realValue > 70) {
         digitalWrite(licht, LOW);
-        Fehlermeldung = "Zu viel Licht";
+        Fehlermeldung = 01;
         resetStatus = true;
-      }else{
-        Fehlermeldung = " ";
+        Fehlercode = 01;
+      } else {
+        Fehlermeldung = 0;
+        Fehlercode = 0;
       }
 
       Serial.print(reading);
@@ -80,19 +86,20 @@ class Pins {
         digitalWrite(keep_alive, LOW);
         delay(2000);
         digitalWrite(powerOnOff, LOW);
-        power = false;
 
       }
     };
 };
 
-Pins Arduino1(11, 10, 8, false);
+//Id aufbau: ID[0] = Arduino id; ID[1]= fehler oder nicht ; ID[2] = fehler status
+int ID[] = {1, 0, 0};
+Pins Arduino1(11, 10, 8, ID);
 
 void setup() {
   Serial.begin(9600);
   Wire.begin(9);
   Wire.onReceive(receiveEvent);
-  Arduino1.setup();
+  Arduino1.first_setup();
 }
 
 void loop() {
@@ -104,7 +111,7 @@ void loop() {
       Wire.onRequest(requestEvent);
       startTime = millis();
     }
-    Arduino1.loop();
+    Arduino1.first_loop();
   }
 }
 
@@ -117,10 +124,21 @@ void receiveEvent(int bytes) {
 
 void requestEvent()
 {
-  if (Fehlermeldung == "Zu viel Licht"){
-    Wire.write("Error");
-  }else{
-    Wire.write("alles gut");
+
+  if (Fehlermeldung == 01) {
+    Arduino1.ID[1] = 1;
+    Arduino1.ID[2] = Arduino1.Fehlercode;
+    for (int x = 0; x < Arduino1.ID; x++) {
+      Wire.write(Arduino1.ID[x]);
+    }
+   
+
+  } else {
+    Arduino1.ID[1] = 0;
+    Arduino1.ID[2] = 0;
+    for (int x = 0; x < Arduino1.ID; x++) {
+      Wire.write(Arduino1.ID[x]);
+    }
   }
- 
+
 }

@@ -6,6 +6,7 @@ class Simulator {
     int LEDreset, LEDpower;
     boolean reset, power;
     String Message;
+    int antwort[3];
 
   public:
     Simulator(int a, int b) {
@@ -21,18 +22,20 @@ class Simulator {
       pinMode(LEDreset, OUTPUT);
       pinMode(LEDpower, OUTPUT);
       Serial.println("Setup end");
-      Wire.beginTransmission( 9 ); // transmit to device #9
-      Wire.write(1); // sends x
-      Wire.endTransmission(); // stop transmitting
+      
     };
 
 
     void loop() {
-      Wire.requestFrom(9, 9);
+
+      Wire.beginTransmission( 9 ); // transmit to device #9
+      Wire.write(1); // sends x
+      Wire.endTransmission(); // stop transmitting
+      Wire.requestFrom(9, 4);
       delay(1000);
-      while (Wire.available()) {
-        char antwort = Wire.read();
-        Serial.print(antwort);
+      for (int x = 0; x <= Wire.available(); x++) {
+        antwort[x] = Wire.read();
+        Serial.print(antwort[x]);
       }
       Serial.print("\n");
 
