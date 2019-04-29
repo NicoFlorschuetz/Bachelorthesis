@@ -1,18 +1,19 @@
 #include "Wire.h"
-
-
 #ifndef CLASS_H
 #define CLASS_H
+
+
 boolean ready = false;
 unsigned long int startTime = 0;
 unsigned long int interval = 1000;
 boolean state = false;
 int Fehlermeldung;
+
 class Pins {
   private:
-    int MegaSim1 = 5;
-    int MegaSim2 = 6;
-    int licht = 12;
+    int MegaSim1;
+    int MegaSim2;
+    int licht;
     //int Pin_ID[];
     String incomingMessage;
     boolean resetStatus = false;
@@ -24,10 +25,13 @@ class Pins {
     int Fehlercode = 0;
     int ID[3];
     int keep_alive, resetLED, sign, powerOnOff;
-    Pins (int x , int y , int z, int id[3] ) {
+    Pins (int x , int y , int z, int r, int w, int sensor, int id[3] ) {
       keep_alive = x;
       resetLED = y;
       powerOnOff = z;
+      MegaSim1 = r;
+      MegaSim2 = w;
+      licht = sensor;
       memcpy(ID, id, sizeof(ID));
 
 
@@ -60,7 +64,7 @@ class Pins {
         digitalWrite(licht, LOW);
         Fehlermeldung = 01;
         resetStatus = true;
-        Fehlercode = 01;
+        Fehlercode = 1;
       } else {
         Fehlermeldung = 0;
         Fehlercode = 0;

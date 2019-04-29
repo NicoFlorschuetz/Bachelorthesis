@@ -1,20 +1,9 @@
 #include <Wire.h>
 #include "/Users/nicoflorschutz/Documents/Bachelorthesis/eigeneBib/class.h"
 
-
-
-
-/*boolean ready = false;
-unsigned long int startTime = 0;
-unsigned long int interval = 1000;
-boolean state = false;
-int Fehlermeldung;*/
-
-
-
 //Id aufbau: ID[0] = Arduino id; ID[1]= fehler oder nicht ; ID[2] = fehler status
 int ID[] = {1, 0, 0};
-Pins Arduino1(11, 10, 8, ID);
+Pins Arduino1(11, 10, 8,5,6,12, ID);
 
 void setup() {
   Serial.begin(9600);
@@ -40,6 +29,8 @@ void receiveEvent(int bytes) {
   int x = Wire.read();
   if (x == 1) {
     ready = true;
+  }else{
+    ready = false;
   }
 }
 
