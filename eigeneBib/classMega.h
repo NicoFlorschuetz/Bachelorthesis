@@ -1,64 +1,33 @@
-#include <Wire.h>
+#include "Wire.h"
 #ifndef CLASSMEGA_H
 #define CLASSMEGA_H
 
-enum pins_arduino {
-        PIN_FIRST = 2,
-        PIN_SECOND = 3,
-        RESET_ARDUINO1 = 9,
-        RESET_ARDUINO2 = 8,
-
-};
-
 class Simulator {
 private:
-pins_arduino Pins_Arduino;
+int pin_first = 2;
+int pin_second = 3;
+int LEDreset1, LEDreset2;
 String Message;
 int antwort[7];
 int counter_of_keep = 0;
 int nodeAddress[2];
-volatile int counter_first = 0;
-volatile int counter_second = 0;
 
 public:
+volatile int counter_first = 0;
+volatile int counter_second = 0;
 Simulator(int a, int b) {
+        LEDreset1 = a;
+        LEDreset2 = b;
+
 };
 
 void setup_pins(){
-        pinMode(RESET_ARDUINO1, OUTPUT);
-        pinMode(RESET_ARDUINO2, OUTPUT);
-        pinMode(PIN_FIRST, INPUT);
-        pinMode(PIN_SECOND, INPUT);
-        digitalWrite(RESET_ARDUINO1, HIGH);
-        digitalWrite(RESET_ARDUINO2, HIGH);
-};
-
-void setCounterOne(int i){
-        if (i == 1) {
-                counter_first += i;
-        }else if(i==0) {
-                counter_first = 0;
-        }
-
-};
-void setCounterTwo(int i){
-        if(i == 1) {
-                counter_second += i;
-        }else if(i == 0) {
-                counter_second = 0;
-        }
-
-};
-getCounterOne(){
-        return counter_first;
-};
-
-getCounterTwo(){
-        return counter_second;
-};
-
-getPins_Arduino(){
-        return Pins_Arduino;
+        pinMode(LEDreset1, OUTPUT);
+        pinMode(LEDreset2, OUTPUT);
+        pinMode(pin_first, INPUT);
+        pinMode(pin_second, INPUT);
+        digitalWrite(LEDreset1, HIGH);
+        digitalWrite(LEDreset2, HIGH);
 };
 
 void failure_detection(int x, int nodeAddress){
@@ -77,9 +46,9 @@ void failure_detection(int x, int nodeAddress){
                                 Serial.println("failure is bigger");
                                 Serial.print(antwort[1]);
                                 Serial.println(antwort[2]);
-                                digitalWrite(RESET_ARDUINO1, LOW);
+                                digitalWrite(LEDreset1, LOW);
                                 delay(2000);
-                                digitalWrite(RESET_ARDUINO2, HIGH);
+                                digitalWrite(LEDreset1, HIGH);
                         }
                 }else if(antwort[0] == -1) {
                         Serial.println("No connection, try to reconnect");
@@ -100,24 +69,24 @@ void serial_input(){
                 Message.trim();
                 if ( Message == "reset board 1") {
                         Serial.println("reset start");
-                        digitalWrite(RESET_ARDUINO1, LOW);
+                        digitalWrite(LEDreset1, LOW);
                         delay(2000);
-                        digitalWrite(RESET_ARDUINO1, HIGH);
+                        digitalWrite(LEDreset1, HIGH);
                         Serial.println("reset end");
                 }else if (Message == "reset board 2") {
                         Serial.println("reset start");
-                        digitalWrite(RESET_ARDUINO2, LOW);
+                        digitalWrite(LEDreset2, LOW);
                         delay(2000);
-                        digitalWrite(RESET_ARDUINO2, HIGH);
+                        digitalWrite(LEDreset2, HIGH);
                         Serial.println("reset end");
                 }else if (Message == "shut down board 1") {
-                        digitalWrite(RESET_ARDUINO1, LOW);
+                        digitalWrite(LEDreset1, LOW);
                 }else if (Message =="turn on board 1") {
-                        digitalWrite(RESET_ARDUINO1, HIGH);
+                        digitalWrite(LEDreset1, HIGH);
                 }else if (Message == "shut down board 2") {
-                        digitalWrite(RESET_ARDUINO2, LOW);
+                        digitalWrite(LEDreset2, LOW);
                 }else if (Message =="turn on board 2") {
-                        digitalWrite(RESET_ARDUINO2, HIGH);
+                        digitalWrite(LEDreset2, HIGH);
                 }
                 Serial.println("I received: " + Message );
 
@@ -127,6 +96,7 @@ void serial_input(){
 void search(){
         int zaehler = 0;
         for(byte search_address = 1; search_address < 120; search_address++) {
+
                 Wire.beginTransmission(search_address);
                 if(Wire.endTransmission() == 0) {
                         nodeAddress[zaehler] = search_address;
@@ -140,7 +110,7 @@ void search(){
 
 void address_range() {
 
-        for(int i = 0; i < sizeof(nodeAddress)/sizeof(nodeAddress[0]); i++) {
+        for(int i = 0; i < 2; i++) {
                 Wire.requestFrom(nodeAddress[i], 7);
                 delay(500);
                 for (int x = 0; x <= Wire.available(); x++) {

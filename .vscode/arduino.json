@@ -1,7 +1,0 @@
-{
-    "board": "arduino:avr:mega",
-    "configuration": "cpu=atmega2560",
-    "port": "/dev/cu.usbmodem14601",
-    "programmer": "AVRISP mkII",
-    "sketch": "MEGASIM/MegaSimulator/MegaSimulator.ino"
-}
