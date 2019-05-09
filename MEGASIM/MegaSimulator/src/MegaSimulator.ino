@@ -1,9 +1,5 @@
-#include "Arduino.h"
 #include <TimerOne.h>
-#include <Wire.h>
-//#include "/Users/nicoflorschutz/Documents/Bachelorthesis\ Kopie/eigeneBib/classMega.h"
 #include <classMega.h>
-//hahahahahahhah
 Simulator Mega1(9,8);
 
 void setup() {
