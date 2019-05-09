@@ -10,9 +10,9 @@ unsigned long int startTime1 = 0;
 unsigned long int interval1 = 3000;
 unsigned long int interval2 = 1000;
 boolean state = false;
-int realValue;
-int Fehlermeldung;
-long current1 = 0;
+unsigned int realValue;
+unsigned int Fehlermeldung;
+unsigned long current1 = 0;
 
 class Pins {
 private:
