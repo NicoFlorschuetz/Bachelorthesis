@@ -1,13 +1,14 @@
 #include <TimerOne.h>
 #include <classMega.h>
+
+
 Simulator Mega1(9,8);
 
 void setup() {
-
+        Serial.println("Setup begin");
         Wire.begin();
         Serial.begin(9600);
         while (!Serial);
-        Serial.println("Setup begin");
         Mega1.setup_pins();
         Mega1.search();
         attachInterrupt(digitalPinToInterrupt(2), count_first, RISING);
@@ -18,14 +19,11 @@ void setup() {
 }
 
 void loop() {
-
         Mega1.address_range();
-
 }
 
 void count_first(){
         Mega1.setCounterOne(1);
-
 }
 
 void count_second(){
