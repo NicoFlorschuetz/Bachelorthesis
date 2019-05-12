@@ -1,5 +1,6 @@
 #include "Wire.h"
 #include <classMicro.h>
+#include "TimerOne.h"
 
 //Id aufbau: ID[0] = Arduino id; ID[1]= fehler oder nicht ; ID[2] = fehler status
 int ID[] = {1, 0, 0, 0};
@@ -12,20 +13,18 @@ Pins Arduino1(10, 8,  12, ID, 8);
 
 void setup() {
         //Wire.onReceive(receiveEvent);
+        Timer1.initialize(4*1000000);
+        Timer1.attachInterrupt(keep_alive);
         Arduino1.board_setup();
         Wire.onRequest(requestEvent);
 }
 
+void keep_alive(){
+        digitalWrite(4,HIGH);
+        digitalWrite(4,LOW);
+}
+
 void loop() {
-        digitalWrite(4, LOW);
-        delayMicroseconds(10);
-        counter++;
-        if(counter == 100) {
-                digitalWrite(4,HIGH);
-                counter = 0;
-        }
-        //Arduino1.send_keep_alive_signal(counter);
-        //counter++;
         Arduino1.sensor_reading();
 }
 
@@ -33,15 +32,15 @@ void loop() {
 
 void requestEvent()
 {
-        if (Arduino1.getFehlermeldung() == SIMPLE_FAILURE) {
+        if (Arduino1.getFailure() == SIMPLE_FAILURE) {
                 Arduino1.ID[1] = 1;
-                Arduino1.ID[2] = Arduino1.getFehlermeldung();
+                Arduino1.ID[2] = Arduino1.getFailure();
                 for (int x = 0; x < Arduino1.ID; x++) {
                         Wire.write(Arduino1.ID[x]);
                 }
-        }else if (Arduino1.getFehlermeldung() == 02) {
+        }else if (Arduino1.getFailure() == 02) {
                 Arduino1.ID[1] = 1;
-                Arduino1.ID[2] =Arduino1.getFehlermeldung();
+                Arduino1.ID[2] =Arduino1.getFailure();
                 for (int x = 0; x < Arduino1.ID; x++) {
                         Wire.write(Arduino1.ID[x]);
                 }
