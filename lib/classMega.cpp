@@ -8,12 +8,12 @@ Simulator::Simulator(int a, int b){
 }
 
 void Simulator::setup_pins(){
+        digitalWrite(RESET_ARDUINO1, HIGH);
+        digitalWrite(RESET_ARDUINO2, HIGH);
         pinMode(RESET_ARDUINO1, OUTPUT);
         pinMode(RESET_ARDUINO2, OUTPUT);
         pinMode(PIN_FIRST, INPUT);
         pinMode(PIN_SECOND, INPUT);
-        digitalWrite(RESET_ARDUINO1, HIGH);
-        digitalWrite(RESET_ARDUINO2, HIGH);
 }
 
 
@@ -55,16 +55,33 @@ void Simulator::failure_detection(int x, int nodeAddress){
                         Serial.println(antwort[x]);
                 }else if(antwort[1] == 1  && x>1) {
                         if (antwort[2] == 1) {
-                                Serial.println("Simple failure");
+                                Serial.print("Simple failure: ");
                                 Serial.print(antwort[1]);
                                 Serial.println(antwort[2]);
                         }else if (antwort[2]== 2) {
-                                Serial.println("failure is bigger");
+                                Serial.print("failure is bigger: ");
                                 Serial.print(antwort[1]);
                                 Serial.println(antwort[2]);
-                                digitalWrite(RESET_ARDUINO1, LOW);
-                                delay(2000);
-                                digitalWrite(RESET_ARDUINO2, HIGH);
+                                if (antwort[0]==1) {
+                                        digitalWrite(RESET_ARDUINO1, LOW);
+                                        delay(2000);
+                                        digitalWrite(RESET_ARDUINO1, HIGH);
+                                        counter_failure_board1++;
+                                }else if (antwort[0]== 2) {
+                                        digitalWrite(RESET_ARDUINO2, LOW);
+                                        delay(2000);
+                                        digitalWrite(RESET_ARDUINO2, HIGH);
+                                        counter_failure_board2++;
+                                }
+                                if (counter_failure_board1 > 3) {
+                                        Serial.println("Error could not be fixed, switch to redundant board");
+                                        counter_failure_board1 = 0;
+                                        digitalWrite(RESET_ARDUINO1, LOW);
+                                }else if(counter_failure_board2 > 3) {
+                                        Serial.println("Error could not be fixed, switch to redundant board");
+                                        counter_failure_board2 = 0;
+                                        digitalWrite(RESET_ARDUINO2, LOW);
+                                }
                         }
                 }else if(antwort[0] == -1) {
                         Serial.println("No connection, try to reconnect");
@@ -115,11 +132,9 @@ void Simulator::search(){
                 if(Wire.endTransmission() == 0) {
                         nodeAddress[zaehler] = search_address;
                         zaehler++;
-                        Serial.println(search_address);
                 }
                 delay(5);
         }
-        zaehler = 0;
 }
 
 void Simulator::address_range(){

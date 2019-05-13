@@ -25,11 +25,11 @@ void Pins::board_setup(){
         digitalWrite(_licht, HIGH);
 }
 
-int Pins::getFehlermeldung(){
+int Pins::getFailure(){
         return Fehlermeldung;
 }
 
-int Pins::getFehlercode(){
+int Pins::getFailurecode(){
         return Fehlercode;
 }
 
@@ -53,7 +53,7 @@ void Pins::sensor_reading(){
                 Fehlermeldung = EVERYTHING_FINE;
         }
 
-        //Serial.println(realValue);
+        Serial.println(realValue);
         if ( resetStatus == true) {
                 digitalWrite(_resetLED, HIGH);
                 delay(4000);
@@ -69,15 +69,4 @@ void Pins::sensor_reading(){
 
 
              }*/
-}
-
-void Pins::send_keep_alive_signal(int counter){
-        digitalWrite(4, LOW);
-        delayMicroseconds(10);
-        //counter++;
-        if(counter == 10) {
-                digitalWrite(4,HIGH);
-                counter = 0;
-        }
-
 }

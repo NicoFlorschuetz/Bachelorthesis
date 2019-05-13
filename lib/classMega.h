@@ -17,9 +17,10 @@ private:
 pins_arduino Pins_Arduino;
 String Message;
 int antwort[7];
-int counter_of_keep = 0;
 int nodeAddress[2];
 int _a,_b;
+int counter_failure_board1= 0;
+int counter_failure_board2 = 0;
 volatile int counter_first = 0;
 volatile int counter_second = 0;
 

@@ -31,13 +31,13 @@ void count_second(){
 }
 
 void keep_alive(){
-        if(Mega1.getCounterOne() >=0 && Mega1.getCounterOne() <=5) {
+        if(Mega1.getCounterOne() >=1 && Mega1.getCounterOne() <=3) {
                 Serial.print("keep alive 1st: ");
                 Serial.println(Mega1.getCounterOne());
         }else{
                 Serial.println("Board 1 is missing");
         }
-        if(Mega1.getCounterTwo() >=0 && Mega1.getCounterTwo() <=5) {
+        if(Mega1.getCounterTwo() >=1 && Mega1.getCounterTwo() <=3) {
                 Serial.print("keep alive 2nd: ");
                 Serial.println(Mega1.getCounterTwo());
         }else{

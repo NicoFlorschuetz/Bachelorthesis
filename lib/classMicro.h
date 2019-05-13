@@ -34,15 +34,14 @@ public:
 int ID[4];
 Pins(int y, int z, int sensor, int id[4], int address);
 
-int getFehlermeldung();
+int getFailure();
 
-int getFehlercode();
+int getFailurecode();
 
 void board_setup();
 
 void sensor_reading();
 
-void send_keep_alive_signal(int counter);
 
 };
 #endif
