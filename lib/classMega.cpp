@@ -45,39 +45,51 @@ int Simulator::getCounterTwo(){
 int Simulator::getPins_Arduino(){
         return Pins_Arduino;
 }
+void Simulator::show_values(int x){
+        Serial.print("The value of board ");
+        Serial.print(antwort[0]);
+        Serial.print(" is: ");
+        Serial.println(antwort[x]);
+}
+
+void Simulator::print_failure(String Failure_Message){
+        Serial.print(Failure_Message);
+        Serial.print(antwort[1]);
+        Serial.println(antwort[2]);
+}
+
+void Simulator::reset_boards(){
+        switch (antwort[0]) {
+        case 1:
+                digitalWrite(RESET_ARDUINO1, LOW);
+                delay(2000);
+                digitalWrite(RESET_ARDUINO1, HIGH);
+                counter_failure_board1++;
+                break;
+        case 2:
+                digitalWrite(RESET_ARDUINO2, LOW);
+                delay(2000);
+                digitalWrite(RESET_ARDUINO2, HIGH);
+                counter_failure_board2++;
+        }
+
+}
 
 void Simulator::failure_detection(int x, int nodeAddress){
         if (antwort[0] != -1) {
                 if ( x >=3 ) {
-                        Serial.print("The value of board ");
-                        Serial.print(antwort[0]);
-                        Serial.print(" is: ");
-                        Serial.println(antwort[x]);
+                        show_values(x);
                 }else if(antwort[1] == 1  && x>1) {
                         if (antwort[2] == 1) {
-                                Serial.print("Simple failure: ");
-                                Serial.print(antwort[1]);
-                                Serial.println(antwort[2]);
+                                print_failure("Simple failue: ");
                         }else if (antwort[2]== 2) {
-                                Serial.print("failure is bigger: ");
-                                Serial.print(antwort[1]);
-                                Serial.println(antwort[2]);
-                                if (antwort[0]==1) {
-                                        digitalWrite(RESET_ARDUINO1, LOW);
-                                        delay(2000);
-                                        digitalWrite(RESET_ARDUINO1, HIGH);
-                                        counter_failure_board1++;
-                                }else if (antwort[0]== 2) {
-                                        digitalWrite(RESET_ARDUINO2, LOW);
-                                        delay(2000);
-                                        digitalWrite(RESET_ARDUINO2, HIGH);
-                                        counter_failure_board2++;
-                                }
-                                if (counter_failure_board1 > 3) {
+                                print_failure("big failure: ");
+                                reset_boards();
+                                if (counter_failure_board1 > 2) {
                                         Serial.println("Error could not be fixed, switch to redundant board");
                                         counter_failure_board1 = 0;
                                         digitalWrite(RESET_ARDUINO1, LOW);
-                                }else if(counter_failure_board2 > 3) {
+                                }else if(counter_failure_board2 > 2) {
                                         Serial.println("Error could not be fixed, switch to redundant board");
                                         counter_failure_board2 = 0;
                                         digitalWrite(RESET_ARDUINO2, LOW);

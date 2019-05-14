@@ -27,6 +27,12 @@ volatile int counter_second = 0;
 public:
 Simulator(int a, int b);
 
+void show_values(int x);
+
+void print_failure(String Failure_Message);
+
+void reset_boards();
+
 void setup_pins();
 
 void setCounterOne(int i);
