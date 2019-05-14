@@ -12,6 +12,8 @@ typedef enum pins_arduino {
 
 }pins_arduino_t;
 
+
+
 class Simulator {
 private:
 pins_arduino Pins_Arduino;
@@ -52,6 +54,7 @@ void serial_input();
 void search();
 
 void address_range();
+
 
 };
 

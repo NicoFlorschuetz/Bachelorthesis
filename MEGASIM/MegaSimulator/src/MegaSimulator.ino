@@ -5,9 +5,9 @@
 Simulator Mega1(9,8);
 
 void setup() {
+        Serial.begin(9600);
         Serial.println("Setup begin");
         Wire.begin();
-        Serial.begin(9600);
         while (!Serial);
         Mega1.setup_pins();
         Mega1.search();

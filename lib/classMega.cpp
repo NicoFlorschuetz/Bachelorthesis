@@ -2,6 +2,8 @@
 #include "Wire.h"
 #include "classMega.h"
 
+
+
 Simulator::Simulator(int a, int b){
         _a = a;
         _b = b;
@@ -71,6 +73,9 @@ void Simulator::reset_boards(){
                 delay(2000);
                 digitalWrite(RESET_ARDUINO2, HIGH);
                 counter_failure_board2++;
+                break;
+        default:
+                break;
         }
 
 }
@@ -80,10 +85,12 @@ void Simulator::failure_detection(int x, int nodeAddress){
                 if ( x >=3 ) {
                         show_values(x);
                 }else if(antwort[1] == 1  && x>1) {
-                        if (antwort[2] == 1) {
-                                print_failure("Simple failue: ");
-                        }else if (antwort[2]== 2) {
-                                print_failure("big failure: ");
+                        switch (antwort[2]) {
+                        case 1:
+                                print_failure("Simple failure: ");
+                                break;
+                        case 2:
+                                print_failure("Big failure: ");
                                 reset_boards();
                                 if (counter_failure_board1 > 2) {
                                         Serial.println("Error could not be fixed, switch to redundant board");
@@ -94,13 +101,17 @@ void Simulator::failure_detection(int x, int nodeAddress){
                                         counter_failure_board2 = 0;
                                         digitalWrite(RESET_ARDUINO2, LOW);
                                 }
+                                break;
+                        default:
+                                break;
                         }
-                }else if(antwort[0] == -1) {
-                        Serial.println("No connection, try to reconnect");
-                        //address_range();
                 }
+        }else if(antwort[0] == -1) {
+                Serial.println("No connection, try to reconnect");
+                //address_range();
+
         }else{
-                Serial.print("Board ");
+                Serial.print("Board with address");
                 Serial.print(nodeAddress);
                 Serial.println(" ist down");
         }
@@ -111,27 +122,35 @@ void Simulator::serial_input(){
         if (Serial.available()) {
                 Message = Serial.readString();
                 Message.trim();
-                if ( Message == "reset board 1") {
+                switch (Message) {
+                case "reset board 1":
                         Serial.println("reset start");
                         digitalWrite(RESET_ARDUINO1, LOW);
                         delay(2000);
                         digitalWrite(RESET_ARDUINO1, HIGH);
                         Serial.println("reset end");
-                }else if (Message == "reset board 2") {
+                        break;
+                case "reset board 2":
                         Serial.println("reset start");
                         digitalWrite(RESET_ARDUINO2, LOW);
                         delay(2000);
                         digitalWrite(RESET_ARDUINO2, HIGH);
                         Serial.println("reset end");
-                }else if (Message == "shut down board 1") {
+                        break;
+                case "shut down board 1":
                         digitalWrite(RESET_ARDUINO1, LOW);
-                }else if (Message =="turn on board 1") {
+                        break;
+                case "turn on board 1":
                         digitalWrite(RESET_ARDUINO1, HIGH);
-                }else if (Message == "shut down board 2") {
+                        break;
+                case "shut down board 2":
                         digitalWrite(RESET_ARDUINO2, LOW);
-                }else if (Message =="turn on board 2") {
+                        break;
+                case "turn on board 2":
                         digitalWrite(RESET_ARDUINO2, HIGH);
+                        break;
                 }
+
                 Serial.println("I received: " + Message );
 
         }
