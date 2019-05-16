@@ -9,6 +9,19 @@ typedef boolean bool;
 
 class Simulator;
 
+struct Executable {
+  void execute(void);
+};
+
+struct RegistryInterface {
+  bool register(Executable *);
+};
+
+struct NullRegistry : public RegistryInterface
+{
+  bool register(Executable *) {}
+} nullRegistry;
+
 struct Message {
   int a, b, c, d, e, f;
 };
@@ -17,11 +30,16 @@ struct FailureHandler {
   void detect(int, Message);
 };
 
-class Protocol {
+class Protocol : public Executable {
 private:
   int buffer[17];
 public:
   bool isMessageValid(void);
+
+  Protocol(RegistryInterface * ri)
+  {
+    ri->register(this);
+  }
 
   Message receive(int id)
   {
@@ -35,20 +53,21 @@ public:
   }
 };
 
-class Board {
+class Board : public Executable {
   int id;
   FailureHandler handler;
   Message message;
   Protocol protocol;
 
-  Board() : id(0) {}
+  Board() : id(0), protocol(&nullRegistry) {}
 
-  Board(int id)
+  Board(int id, RegistryInterface * ri)
+    : protocol(ri)
   {
     this->id = id;
   }
 
-  void execute()
+  void execute(void)
   {
     // assert(id != 0);
 
@@ -60,19 +79,39 @@ class Board {
   }
 };
 
-class Simulator
+class Simulator : public RegistryInterface
 {
 private:
   Board boards[];
+  std::list<Executable*> schedule;
+
+  bool register(Executable * e)
+  {
+    schedule.push_back(e);
+  }
 
   Simulator()
+    : boards { Board(1, this) }
   {
-    board[0].execute();
+    register(boards[0]);
+
+    while(forever)
+    {
+      for(auto s : schedule)
+      {
+        s.execute();
+      }
+    }
 
   }
 
 
 }
+
+Simulator s;
+
+Board b;
+Board b1(1, &s);
 
 
 
