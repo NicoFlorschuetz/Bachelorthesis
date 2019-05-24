@@ -2,9 +2,8 @@
 //#include "BoardClass.h"
 
 
-
 FDIR_Master::FDIR_Master(){
-        setup_pins();
+        //setup_pins();
 }
 
 
@@ -13,21 +12,26 @@ Protocol::Protocol(){
 }
 
 bool Protocol::isMessageValid(){
-        if(buffer[0] != 0) {
-                return true;
-        }else{
-                return false;
-        }
+        Serial.println(buffer[0] != 0);
+        return (buffer[0] != 0);
 }
 
-Message Protocol::receive(){
+static Message Protocol::receive(){
         Message new_message;
         new_message.id_board = buffer[0];
         new_message.failureCode = buffer[1];
-        new_message.failure = buffer[2];
+        new_message.failureSolved = buffer[2];
         new_message.value = buffer[3];
         return new_message;
 
+}
+
+static Setup_Message Protocol::receiveSetup(){
+        Setup_Message new_setup_Message;
+        new_setup_Message.keepAlivePin = buffer[1];
+        new_setup_Message.fdirAction = buffer[2];
+        new_setup_Message.fdirActionParam = buffer[3];
+        return new_setup_Message;
 }
 
 void Protocol::readData(int id){
@@ -36,27 +40,70 @@ void Protocol::readData(int id){
         while(x<=Wire.available()) {
                 buffer[x] = Wire.read();
                 x++;
+
         }
 }
+
+void Protocol::sendMessage(int id, MessageToSlave msg){
+        //if((failure.LevelThree==true)&&(h.LevelSent == false)) {
+        Wire.beginTransmission(id);
+        Wire.write(msg);
+        Wire.endTransmission();
+        //}else if ((failure.LevelThree == true)&&(h.LevelSent == true)) {
+
+        /*}
+           else if(failure.LevelNull == true)
+           {
+                h.LevelSent = false;
+           }*/
+
+}
+
+
 
 void Board::execute(void){
-        const static struct Message resetMessage;
+        if(health) {
+                const static struct Message resetMessage;
+                const static struct Setup_Message setupReset;
 
-        protocol.readData(id);
+                protocol.readData(id);
 
-        if (protocol.isMessageValid())
-        {
-                message = protocol.receive();
-                Serial.print(message.id_board);
-                Serial.print(message.failureCode);
-                Serial.print(message.failure);
-                Serial.println(message.value);
-                handler.detect(id, message);
-                message = resetMessage;
+                if (protocol.isMessageValid())
+                {
+
+                        message = protocol.receive();
+                        Serial.print(message.id_board);
+                        Serial.print(message.failureCode);
+                        Serial.print(message.failureSolved);
+                        Serial.println(message.value);
+
+                        failureLevel = handler.detect(id, message);
+                        if(fdirAction != NULL) {
+                                if(failureLevel.LevelNull) {
+                                        fdirAction->reset();
+                                }else if (failureLevel.LevelThree) {
+                                        fdirAction->execute();
+                                }
+                        }
+                        //messageToSlave sendMessageToMaster = handler.MakeFailureCodeToMessage(failureLevel);
+                        //if(sendMessageToMaster != NO_MSG) {
+                        //protocol.sendMessage(id,failureLevel,handler, setup_Message);//,sendMessageToMaster);
+                        //}
+
+                        message = resetMessage;
+                }else if(!protocol.isMessageValid()) {
+                        setup_Message = protocol.receiveSetup();
+                        this->fdirAction = FdirActionFactory::getFdirAction(setup_Message.fdirAction, setup_Message.fdirActionParam);
+                }
         }
+
+
 }
 
-void FailureHandler::detect(int id, Message message){
+
+
+
+FailureAnalysis FailureHandler::detect(int id, Message message){
         FailureAnalysis fehlerAnalyse;
         switch (message.failureCode) {
         case 0:
@@ -70,74 +117,65 @@ void FailureHandler::detect(int id, Message message){
                 break;
         case 3:
                 fehlerAnalyse.LevelThree = true;
+
                 break;
         case 4:
                 fehlerAnalyse.LevelFour = true;
                 break;
         }
-        Serial.print(id);
-        Serial.print("\t");
-        Serial.print(fehlerAnalyse.LevelNull);
-        Serial.print(fehlerAnalyse.LevelOne);
-        Serial.print(fehlerAnalyse.LevelTwo);
-        Serial.print(fehlerAnalyse.LevelThree);
-        Serial.println(fehlerAnalyse.LevelFour);
-
-
-        /*if (antwort[0] != -1) {
-                       if ( x >=3 ) {
-                       }else if(antwort[1] == 1  && x>1) {
-                               if (antwort[2] == 1) {
-                                       Serial.println("Simple failure");
-                                       Serial.print(antwort[1]);
-                                       Serial.println(antwort[2]);
-                               }else if (antwort[2]== 2) {
-                                       Serial.println("failure is bigger");
-                                       Serial.print(antwort[1]);
-                                       Serial.println(antwort[2]);
-                                       digitalWrite(RESET_ARDUINO1, LOW);
-                                       delay(2000);
-                                       digitalWrite(RESET_ARDUINO2, HIGH);
-                               }
-                       }else if(antwort[0] == -1) {
-                               Serial.println("No connection, try to reconnect");
-                               //address_range();
-                       }
-               }else{
-                       Serial.print("Board ");
-                       Serial.print(nodeAddress);
-                       Serial.println(" ist down");
-               }
-               serial_input();
-         */
+        return fehlerAnalyse;
 }
 
+FdirAction* FdirActionFactory::getFdirAction(FDIR_ACTION_t fdirAction, int param){
+        FdirAction *ret;
+        switch(fdirAction)
+        {
+        case STANDARD_FDIR:
+                PinReset pinReset = new PinReset(param); //--> Pin
+                ret = (FdirAction*)&pinReset;
+                break;
+        case WIRE_FDIR:
+                WireReset wireReset = new WireReset(param); // --> id
+                ret = (FdirAction*)&wireReset;
+                break;
+        default:
+                break;
+        }
+        return ret;
+}
 
+void PinReset::execute(){
+        digitalWrite(pin, HIGH);
+        digitalWrite(pin, LOW);
+}
+
+void PinReset::reset(){
+        //not used
+}
+
+void WireReset::execute(){
+        if(messageSent == false) {
+                protocol.sendMessage(this->id, 1);
+                messageSent = true;
+        }
+}
+
+void WireReset::reset(){
+        messageSent = false;
+}
 
 bool FDIR_Master::reg(Executable *e){
         schedule[anzahlBoards]= e;
 }
 
 void FDIR_Master::searchForAddresses(){
+        delay(1000);
         for(int search_address = 1; search_address < 120; search_address++) {
                 Wire.beginTransmission(search_address);
                 if(Wire.endTransmission() == 0) {
                         Board * const board = new Board(search_address);
                         boards[anzahlBoards] = board;
                         reg (dynamic_cast<Executable*>(board));
-                        /*Wire.beginTransmission(search_address);
-                           Wire.write(1);
-                           Wire.endTransmission();
-                           delay(50);
-                           if(counter_first == 1) {
-                                BoardIdToInterruptPin[0][0] = PIN_FIRST;
-                                BoardIdToInterruptPin[0][1] = search_address;
-
-
-                           }else if(counter_second == 1) {
-                                BoardIdToInterruptPin[1][0] = PIN_SECOND;
-                                BoardIdToInterruptPin[1][1] = search_address;
-                           }*/
                         anzahlBoards++;
                 }
                 delay(5);
@@ -158,6 +196,10 @@ void FDIR_Master::setup_pins(){
         pinMode(RESET_ARDUINO2, OUTPUT);
         pinMode(PIN_FIRST, INPUT);
         pinMode(PIN_SECOND, INPUT);
+        pinMode(22, OUTPUT);
+        pinMode(24, OUTPUT);
+        digitalWrite(22, LOW);
+        digitalWrite(24, LOW);
 }
 
 void FDIR_Master::setCounterOne(int i){
@@ -183,125 +225,3 @@ int FDIR_Master::getCounterOne(){
 int FDIR_Master::getCounterTwo(){
         return counter_second;
 }
-
-
-
-/*class Protocol {
-   private:
-   int buffer[7];
-   int id;
-   public:
-   bool isMessageValid(void) {
-        if(new_message.id_board != 0 && new_message.length == 42) {
-                return true;
-        }
-
-   }
-
-   Protocol()
-   {
-   }
-
-   Message receive()
-   {
-
-        // Message <- buffer
-        // clear buffer/message
-        //baue empfangene werte zu message zusammen
-        //std::cout << "Receive protocol\n";
-
-        new_message.length += 4;
-        new_message.id_board = buffer[0];
-        new_message.failure = buffer[1];
-        new_message.failureCode = buffer[2];
-        new_message.keep_alive_HP = buffer[3];
-
-        const static struct Message resetMessage;
-        new_message = resetMessage;
-   }
-
-   void readData(int id)
-   //void execute(void)  //
-   {
-        Wire.requestFrom(id,7);
-        int x = 0;
-        while(x<=Wire.available()) {
-                buffer[x] = Wire.read();
-                x++;
-        }
-        // receive single bytes over wire
-   }
-   };*/
-
-/*class Board : public Executable {
-   int id;
-   FailureHandler handler;
-   Message message;
-   Protocol protocol;
-
-   public:
-   Board() : id(0) {   //was macht ":" und was passiert hier
-   }
-
-   Board(int id)
-        : protocol()
-   {
-        this->id = id;
-   }
-
-   void execute(void)
-   {
-        // assert(id != 0);
-        protocol.readData(id);
-
-        if (protocol.isMessageValid())
-        {
-                message = protocol.receive();
-                handler.detect(id, message);
-        }
-   }
-   };*/
-
-/*class FDIR_Master
-   {
-   private:
-   std::list<Board*> boards;
-   std::list<Executable*> schedule;
-
-   bool reg (Executable * e)
-   {
-        schedule.push_back(e);
-   }
-
-   enum { forever = 1 };
-
-   public:
-   FDIR_Master()
-   {
-        // init
-        //search for boards and add them to Executable
-        //wird hier im constructor aufgerufen und erstellt boards obwohl FDIR_Master noch nicht vollständig aufgebaut
-        for(int search_address = 1; search_address < 120; search_address++) {
-                Wire.beginTransmission(search_address);
-                if(Wire.endTransmission() == 0) {
-                        //Board board(search_address);
-                        Board * const board = new Board(search_address);
-                        boards.push_back(board);
-                        reg (dynamic_cast<Executable*>(board));
-                }
-                delay(5);
-        }
-
-        do
-        {
-                for(auto s : schedule)
-                {
-                        s->execute();
-                }
-        }
-        while(forever);
-
-   }
-
-
-   };*/

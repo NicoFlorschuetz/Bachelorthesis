@@ -3,15 +3,9 @@
 
 #include "Arduino.h"
 
-//may be change to solveProblem and bool struct with yes or no
-/*typedef enum FehlerMeldung {
-        EVERYTHING_FINE = 0,
-        SIMPLE_FAILURE = 01,
-        BIGGER_FAILURE = 02
-   }FehlerMeldung_one;*/
 
-struct SolveProblemSuccess {
-        bool Solved = false;
+struct ProblemStatus {
+        bool Normal = false;
 };
 
 typedef enum FehlerCode {
@@ -28,28 +22,26 @@ extern unsigned int realValue;
 extern unsigned long current1;
 
 
+
 class FDIR_Slave {
 private:
 
-//FehlerMeldung Fehlermeldung;
-FehlerCode Fehlercode;
+FehlerCode FailureCode;
 String incomingMessage;
-bool resetStatus = false;
+
 int _resetLED, _sign, _powerOnOff, _licht, _address;
 
 public:
-SolveProblemSuccess solveProblemSuccess;
+bool resetStatus = false;
+ProblemStatus problemStatus;
 int ID[4];
 FDIR_Slave(int y, int z, int sensor, int id[4], int address);
-
-int getFailure();
 
 int getFailurecode();
 
 void board_setup();
 
 void sensor_reading();
-
 
 };
 #endif

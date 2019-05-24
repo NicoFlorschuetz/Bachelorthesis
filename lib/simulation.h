@@ -3,9 +3,6 @@
 
 #include "Arduino.h"
 #include <Wire.h>
-//#include "BoardClass.h"
-
-
 
 typedef enum pins_arduino {
 
@@ -19,18 +16,37 @@ typedef enum InterruptPin {
         PIN_SECOND = 3,
 }interruptPin;
 
+typedef enum MessageToSlave {
+        NO_MSG = 0,
+        RETURN_MSG = 1,
+}messageToSlave;
+
+typedef enum eFdirAction
+{
+        STANDARD_FDIR = 0,
+        WIRE_FDIR = 1
+}FDIR_ACTION_t;
+
 struct Executable {
         virtual void execute(void) = 0; // abstract method as interface
         virtual ~Executable() {
         }
 };
 
+struct FdirAction : public Executable
+{
+        virtual void reset(void) = 0;
+        virtual ~FdirAction(){
+
+        }
+};
 struct Message {
-        int id_board, failureCode, failure, value;
+        int id_board, failureCode, failureSolved, value;
 };
 
-struct FailureHandler {
-        virtual void detect(int, Message);
+struct Setup_Message {
+        int keepAlivePin, fdirActionParam;
+        FDIR_ACTION_t fdirAction;
 };
 
 struct FailureAnalysis {
@@ -41,75 +57,103 @@ struct FailureAnalysis {
         bool LevelFour = false;
 };
 
-
+struct FailureHandler {
+        virtual FailureAnalysis detect(int, Message);
+        bool LevelSent;
+};
 
 class FDIR_Master;
-
 class Protocol {
 private:
 int buffer[7];
 int id;
+
 public:
 bool isMessageValid(void);
 Protocol();
-
+Setup_Message receiveSetup();
 Message receive();
 void readData(int id);
-
+void sendMessage(int,  MessageToSlave);
 };
 
 class Board : public Executable {
 int id;
 FailureHandler handler;
 Message message;
+Setup_Message setup_Message;
 Protocol protocol;
+FailureAnalysis failureLevel;
 
 public:
+bool health = true;
+FdirAction* fdirAction;
 Board() : id(0){
 }
-
 Board(int id) : protocol(){
         this->id = id;
+        this->fdirAction = NULL;
 }
 
 void execute(void);
 
 };
 
+class FdirActionFactory {
+public:
+static FdirAction* getFdirAction(FDIR_ACTION_t, int);
 
+};
+
+class PinReset : public FdirAction {
+private:
+int pin;
+public:
+PinReset(int pin){
+        this->pin = pin;
+}
+void execute(void);
+void reset(void);
+
+};
+
+class WireReset : public FdirAction {
+private:
+int id;
+Protocol protocol;
+bool messageSent;
+public:
+WireReset(int id) : protocol(){
+        this->id = id;
+        this->messageSent = false;
+}
+
+void execute(void);
+void reset(void);
+
+};
 
 class FDIR_Master {
 private:
 Board *boards[10];
 Executable *schedule[10];
 bool reg(Executable* e);
-
-//[interruptPin][boards]
-//int BoardIdToInterruptPin[2][2];
-
 volatile int counter_first = 0;
 volatile int counter_second = 0;
 int anzahlBoards = 0;
+
 public:
-
 FDIR_Master();
-
 void setup_pins();
-
 void searchForAddresses();
-
 void doScheduling();
-
 void setCounterOne(int i);
-
 void setCounterTwo(int i);
-
 int getCounterOne();
-
 int getCounterTwo();
-
-
 };
+
+
 
 
 #endif

@@ -25,18 +25,20 @@ void setup() {
 void loop() {
         boolean PIN = digitalRead(10);
         if(PIN == HIGH) {
-                Serial.println(RESET_MODE);
+                //Serial.println(RESET_MODE);
                 digitalWrite(11, HIGH);
                 digitalWrite(12, LOW);
+                delay(2000);
         }else if(PIN == LOW) {
-                Serial.println(NORMAL_MODE);
+                //Serial.println(NORMAL_MODE);
                 digitalWrite(11, LOW);
                 digitalWrite(12, HIGH);
         }
-        delay(200);
+        //delay(3000);
 }
 
 void keep_alive(){
-        state = !state;
-        digitalWrite(4, state);
+        digitalWrite(4,HIGH);
+
+        digitalWrite(4,LOW);
 }

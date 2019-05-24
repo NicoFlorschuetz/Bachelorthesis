@@ -8,6 +8,7 @@ void setup() {
         Serial.println("Setup begin");
         Wire.begin();
         while (!Serial);
+        Mega.setup_pins();
         Mega.searchForAddresses();
         //Mega.setup_pins();
         //Mega1.search();
@@ -20,15 +21,13 @@ void setup() {
 
 void loop() {
         Mega.doScheduling();
-        delay(500);
+        delay(100);
 }
 
 void count_first(int pin){
         Mega.setCounterOne(1);
-//        count_generic(PIN_FIRST);
 }
 
-//void count_generic(int pin)
 
 
 void count_second(){

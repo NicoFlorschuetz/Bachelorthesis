@@ -23,15 +23,13 @@ void FDIR_Slave::board_setup(){
         pinMode(_resetLED, OUTPUT);
         pinMode(_powerOnOff, OUTPUT);
         pinMode(4, OUTPUT);
+        pinMode(2, INPUT);
         digitalWrite(_licht, HIGH);
 }
 
-int FDIR_Slave::getFailure(){
-        //  return Fehlermeldung;
-}
 
 int FDIR_Slave::getFailurecode(){
-        return Fehlercode;
+        return FailureCode;
 }
 
 void FDIR_Slave::sensor_reading(){
@@ -39,36 +37,37 @@ void FDIR_Slave::sensor_reading(){
         realValue = map(reading, 0, 1000, 0, 100);
         if (realValue > 70) {
                 current1 += 1;
-                if(current1 >= interval1) {
-                        digitalWrite(_licht, LOW);
-
-                        //Fehlermeldung = BIGGER_FAILURE;
-                        resetStatus = true;
-                        Fehlercode = CODE_TWO;
-
+                if(current1 >= interval1 && problemStatus.Normal == false) {
                         if (tryRestart >= 1) {
-                                solveProblemSuccess.Solved = false;
-                                tryRestart == 0;
+                                FailureCode = CODE_THREE;
+                        }else{
+                                digitalWrite(_licht, LOW);
+
+                                resetStatus = true;
+                                FailureCode = CODE_TWO;
+                                tryRestart++;
                         }
-                        tryRestart++;
+
                 }else if (current1 >= interval2) {
-                        solveProblemSuccess.Solved = true;
-                        //Fehlermeldung  = SIMPLE_FAILURE;
-                        Fehlercode = CODE_ONE;
+                        problemStatus.Normal = false;
+                        FailureCode = CODE_ONE;
                 }
         }else{
-                solveProblemSuccess.Solved = true;
+                tryRestart = 0;
+                problemStatus.Normal = true;
                 current1 = 0;
-                Fehlercode = CODE_ZERO;
-                //Fehlermeldung = EVERYTHING_FINE;
+                FailureCode = CODE_ZERO;
+                digitalWrite(_licht, HIGH);
         }
 
         Serial.println(realValue);
+
         if ( resetStatus == true) {
                 digitalWrite(_resetLED, HIGH);
-                delay(4000);
                 digitalWrite(_resetLED, LOW);
+                delay(500);
                 resetStatus = false;
                 digitalWrite(_licht, HIGH);
         }
+
 }
