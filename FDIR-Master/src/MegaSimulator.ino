@@ -8,7 +8,7 @@ void setup() {
         Serial.println("Setup begin");
         Wire.begin();
         while (!Serial);
-        Mega.setup_pins();
+
         Mega.searchForAddresses();
         //Mega.setup_pins();
         //Mega1.search();
