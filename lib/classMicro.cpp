@@ -2,7 +2,7 @@
 #include "Wire.h"
 #include "classMicro.h"
 
-unsigned long int interval1 = 3000;
+unsigned long int interval1 = 2000;
 unsigned long int interval2 = 1000;
 unsigned int realValue = 0;
 unsigned long current1 = 0;
@@ -25,6 +25,8 @@ void FDIR_Slave::board_setup(){
         pinMode(4, OUTPUT);
         pinMode(2, INPUT);
         digitalWrite(_licht, HIGH);
+        digitalWrite(_resetLED, LOW);
+        digitalWrite(_powerOnOff, LOW);
 }
 
 
@@ -34,14 +36,15 @@ int FDIR_Slave::getFailurecode(){
 
 void FDIR_Slave::sensor_reading(){
         int reading = analogRead(A0);
-        realValue = map(reading, 0, 1000, 0, 100);
-        if (realValue > 70) {
+        realValue = map(reading, 0, 1024, 0, 100);
+
+        if (realValue >= 70) {
                 current1 += 1;
                 if(current1 >= interval1 && problemStatus.Normal == false) {
-                        if (tryRestart >= 1) {
+                        if (tryRestart >= 3) {
                                 FailureCode = CODE_THREE;
                         }else{
-                                digitalWrite(_licht, LOW);
+                                //digitalWrite(_licht, LOW);
 
                                 resetStatus = true;
                                 FailureCode = CODE_TWO;
@@ -59,15 +62,15 @@ void FDIR_Slave::sensor_reading(){
                 FailureCode = CODE_ZERO;
                 digitalWrite(_licht, HIGH);
         }
-
-        Serial.println(realValue);
+        delay(5);
+        //Serial.println(realValue);
 
         if ( resetStatus == true) {
                 digitalWrite(_resetLED, HIGH);
                 digitalWrite(_resetLED, LOW);
                 delay(500);
                 resetStatus = false;
-                digitalWrite(_licht, HIGH);
+                //digitalWrite(_licht, HIGH);
         }
 
 }

@@ -6,8 +6,8 @@
 
 typedef enum pins_arduino {
 
-        RESET_ARDUINO1 = 9,
-        RESET_ARDUINO2 = 8,
+        RESET_ARDUINO1 = 10,
+        RESET_ARDUINO2 =11,
 
 }pins_arduino_t;
 
@@ -46,7 +46,7 @@ struct Message {
 
 struct Setup_Message {
         int keepAlivePin, fdirActionParam;
-        FDIR_ACTION_t fdirAction;
+        FDIR_ACTION_t fdirActions;
 };
 
 struct FailureAnalysis {
@@ -87,12 +87,12 @@ FailureAnalysis failureLevel;
 
 public:
 bool health = true;
-FdirAction* fdirAction;
+FdirAction* fdirActions;
 Board() : id(0){
 }
 Board(int id) : protocol(){
         this->id = id;
-        this->fdirAction = NULL;
+        this->fdirActions = NULL;
 }
 
 void execute(void);
