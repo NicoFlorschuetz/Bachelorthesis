@@ -17,6 +17,8 @@ void setup() {
         pinMode(11,OUTPUT);
         pinMode(12,OUTPUT);
         pinMode(4, OUTPUT);
+        digitalWrite(11,LOW);
+        digitalWrite(4,LOW);
         Timer1.initialize(4*1000000);
         Timer1.attachInterrupt(keep_alive);
         Serial.println("Setup main processor end");
