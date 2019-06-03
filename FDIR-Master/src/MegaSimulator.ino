@@ -4,7 +4,7 @@
 FDIR_Master Mega;
 
 void setup() {
-        Serial.begin(9600);
+        Serial.begin(115200);
         Serial.println("Setup begin");
         Wire.begin();
         while (!Serial);
