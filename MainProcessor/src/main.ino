@@ -41,6 +41,5 @@ void loop() {
 
 void keep_alive(){
         digitalWrite(4,HIGH);
-
         digitalWrite(4,LOW);
 }

@@ -3,48 +3,58 @@
 #include "TimerOne.h"
 
 volatile unsigned int counter= 0;
+
+
 int command = 0;
 
 #define TARGET2
 #ifdef TARGET1
 //Id aufbau: ID[0] = Arduino id; ID[1]= fehler oder nicht ; ID[2] = fehler status
-int ID[] = {0,2, 0, 40};
+int ID[] = {0,11, 0, 40};
 //The constructor of the class FDIR_Slave consists of GREEN_LED, RED_LED, ANALOG_PIN, ID, I2C_ADDRESS
 FDIR_Slave Arduino1(10, 8,  12, ID, 8);
 #endif
 
 #ifdef TARGET2
-int ID[] = {0, 3, 0, 30};
+int ID[] = {0, 10, 0, 30};
 FDIR_Slave Arduino1(10, 8,  12, ID, 9);
 #endif
+
+
 void setup() {
         Arduino1.board_setup();
+        attachInterrupt(digitalPinToInterrupt(3), counterFirst, RISING);
+        //call keep_alive funciton at interrupt
         Timer1.initialize(4*1000000);
         Timer1.attachInterrupt(keep_alive);
-        //Wire.onReceive(ReceiveCommandFromMaster);
         Wire.onRequest(requestEvent);
 
 }
 
-/*void ReceiveCommandFromMaster(int anzahl){
-        int receive;
-        while(0<Wire.available()) {
-                receive = Wire.read();
-                if(receive == 1) {//receive[0] == 0 && receive[1]==1) {
-                        digitalWrite(10, HIGH);
-                        digitalWrite(10, LOW);
-
-                }
-        }
-   }*/
-
+//send keep alive over pin 4
 void keep_alive(){
-        digitalWrite(4,HIGH);
-        digitalWrite(4,LOW);
+        if(Arduino1.counter_first >=1 && Arduino1.counter_first <=3) {
+                Arduino1.boardIsOkay = true;
+        }else{
+                Arduino1.boardIsOkay = false;
+        }
+        setCounter(0);
+}
+
+void counterFirst(int pin){
+        setCounter(1);
+}
+
+void setCounter(int i){
+        if (i == 1) {
+                Arduino1.counter_first += i;
+        }else if(i == 0) {
+                Arduino1.counter_first = 0;
+        }
 }
 
 void loop() {
-
+        //wait on signal at pin 2
         if(digitalRead(2) == HIGH) {
                 digitalWrite(10, HIGH);
                 digitalWrite(10, LOW);
@@ -56,6 +66,7 @@ void loop() {
 
 void requestEvent()
 {
+        //at first time (ID[0] == 0) ID is a setup ID with reset pin, Reset mode and output pin
         if (Arduino1.ID[0] != 0) {
 
                 Arduino1.ID[1]= Arduino1.getFailurecode();
@@ -67,13 +78,10 @@ void requestEvent()
                         Arduino1.ID[2] = 0;
                         Arduino1.ID[3] = 0;
                 }
-                Serial.print(Arduino1.ID[0]);
-                Serial.print(Arduino1.ID[1]);
-                Serial.print(Arduino1.ID[2]);
-                Serial.println(Arduino1.ID[3]);
-                /*for (int x = 0; x < sizeof(Arduino1.ID)/sizeof(Arduino1.ID[0]); x++) {
-                     Wire.write(Arduino1.ID[x]);
-                   }*/
+                /*Serial.print(Arduino1.ID[0]);
+                   Serial.print(Arduino1.ID[1]);
+                   Serial.print(Arduino1.ID[2]);
+                   Serial.println(Arduino1.ID[3]);*/
                 for (int x = 0; x < sizeof(Arduino1.ID)/sizeof(Arduino1.ID[0]); x++) {
                         Wire.write(Arduino1.ID[x]);
                 }

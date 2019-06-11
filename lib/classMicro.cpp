@@ -19,10 +19,11 @@ FDIR_Slave::FDIR_Slave(int y, int z, int sensor, int id[4], int address){
 void FDIR_Slave::board_setup(){
         Serial.begin(9600);
         Wire.begin(_address);
+        while (!Serial);
         pinMode(_licht, OUTPUT);
         pinMode(_resetLED, OUTPUT);
         pinMode(_powerOnOff, OUTPUT);
-        pinMode(4, OUTPUT);
+        pinMode(3, INPUT);
         pinMode(2, INPUT);
         digitalWrite(_licht, HIGH);
         digitalWrite(_resetLED, LOW);
@@ -38,14 +39,12 @@ void FDIR_Slave::sensor_reading(){
         int reading = analogRead(A0);
         realValue = map(reading, 0, 1024, 0, 100);
 
-        if (realValue >= 70) {
+        if (realValue >= 70 || boardIsOkay == false) {
                 current1 += 1;
-                if(current1 >= interval1 && problemStatus.Normal == false) {
+                if((current1 >= interval1 && problemStatus.Normal == false) || boardIsOkay == false) {
                         if (tryRestart >= 3) {
                                 FailureCode = CODE_THREE;
                         }else{
-                                //digitalWrite(_licht, LOW);
-
                                 resetStatus = true;
                                 FailureCode = CODE_TWO;
                                 tryRestart++;
@@ -65,7 +64,7 @@ void FDIR_Slave::sensor_reading(){
         delay(5);
         //Serial.println(realValue);
 
-        if ( resetStatus == true) {
+        if ( resetStatus == true || boardIsOkay == false) {
                 digitalWrite(_resetLED, HIGH);
                 digitalWrite(_resetLED, LOW);
                 delay(500);

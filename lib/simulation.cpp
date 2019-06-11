@@ -15,6 +15,7 @@ bool Protocol::isMessageValid(){
         return (buffer[0] != 0);
 }
 
+//create new message
 static Message Protocol::receive(){
         Message new_message;
         new_message.id_board = buffer[0];
@@ -25,6 +26,7 @@ static Message Protocol::receive(){
 
 }
 
+//create new setup Message
 static Setup_Message Protocol::receiveSetup(){
         Setup_Message new_setup_Message;
         new_setup_Message.keepAlivePin = buffer[1];
@@ -33,9 +35,10 @@ static Setup_Message Protocol::receiveSetup(){
         return new_setup_Message;
 }
 
+//get data via I2C
 void Protocol::readData(int id){
         Wire.requestFrom(id,7);
-        delay(5);
+        //delay(5);
         int x = 0;
         while(x<=Wire.available()) {
                 buffer[x] = Wire.read();
@@ -44,6 +47,7 @@ void Protocol::readData(int id){
         }
 }
 
+//send message to slave via I2C
 void Protocol::sendMessage(int id, MessageToSlave msg){
         Wire.beginTransmission(id);
         Wire.write(msg);
@@ -51,17 +55,14 @@ void Protocol::sendMessage(int id, MessageToSlave msg){
 }
 
 
-
+//main function
 void Board::execute(void){
-        if(health) {
+        if(healthstatus.health == 1) {
                 const static struct Message resetMessage;
-                const static struct Setup_Message setupReset;
-
                 protocol.readData(id);
 
                 if (protocol.isMessageValid())
                 {
-
                         message = protocol.receive();
                         Serial.print(message.id_board);
                         Serial.print(message.failureCode);
@@ -72,25 +73,24 @@ void Board::execute(void){
                                 if(failureLevel.LevelNull) {
                                         fdirActions->reset();
                                 }else if (failureLevel.LevelThree) {
-                                        fdirActions->execute();
+                                        healthstatus.health = false;
+                                        //fdirActions->execute();
                                 }
                         }
                         message = resetMessage;
-                }   else if(!protocol.isMessageValid()) {
+                }else if(!protocol.isMessageValid()) {
                         setup_Message = protocol.receiveSetup();
                         Serial.print(setup_Message.keepAlivePin);
                         Serial.print(setup_Message.fdirActions);
                         Serial.println(setup_Message.fdirActionParam);
-                        this->fdirActions = FdirActionFactory::getFdirAction(setup_Message.fdirActions, setup_Message.fdirActionParam);
+                        this->fdirActions = FdirActionFactory::getFdirAction(setup_Message.fdirActions, setup_Message.keepAlivePin);
                 }
+        }else if (healthstatus.health == false) {
         }
-
-
 }
 
 
-
-
+//analyse failure with the help of the received message
 FailureAnalysis FailureHandler::detect(int id, Message message){
         FailureAnalysis fehlerAnalyse;
         switch (message.failureCode) {
@@ -114,6 +114,7 @@ FailureAnalysis FailureHandler::detect(int id, Message message){
         return fehlerAnalyse;
 }
 
+//set the reset mode
 FdirAction* FdirActionFactory::getFdirAction(FDIR_ACTION_t fdirActions, int param){
         FdirAction *ret;
         switch(fdirActions)
@@ -127,13 +128,15 @@ FdirAction* FdirActionFactory::getFdirAction(FDIR_ACTION_t fdirActions, int para
         default:
                 break;
         }
-
         return ret;
 }
 
+//shut down collapsed board
 void PinReset::execute(){
-        digitalWrite(pin, HIGH);
+        //digitalWrite(pin, HIGH);
         digitalWrite(pin, LOW);
+
+        //digitalWrite(pin, HIGH);
 }
 
 void PinReset::reset(){
@@ -141,24 +144,29 @@ void PinReset::reset(){
         //not used
 }
 
+//send message to slave
 void WireReset::execute(){
         if(messageSent == false) {
-                protocol.sendMessage(this->id, 1);
+                protocol.sendMessage(this->id, RETURN_MSG);
                 messageSent = true;
         }
 }
 
+//set messageSent to false, so Master can send message just for one time
 void WireReset::reset(){
         messageSent = false;
 }
 
+//add new Board to schedule
 bool FDIR_Master::reg(Executable *e){
         schedule[anzahlBoards]= e;
 }
 
+//iterates over 127 possible addresses and wait for request from slave
+//and create new board object for each address
 void FDIR_Master::searchForAddresses(){
         delay(1000);
-        for(int search_address = 1; search_address < 120; search_address++) {
+        for(int search_address = 1; search_address < 127; search_address++) {
                 Wire.beginTransmission(search_address);
                 if(Wire.endTransmission() == 0) {
                         Board * const board = new Board(search_address);
@@ -170,13 +178,17 @@ void FDIR_Master::searchForAddresses(){
         }
 }
 
+//for each board in scheduling
 void FDIR_Master::doScheduling(){
         for(int i = 0; i< anzahlBoards; i++)
         {
+                //LED zum blinken bringen, um zu überprüfen ob es noch was macht
+
                 schedule[i]->execute();
         }
 }
 
+//first setup for pins
 void FDIR_Master::setup_pins(){
         digitalWrite(40, LOW);
         digitalWrite(30, LOW);
@@ -193,26 +205,26 @@ void FDIR_Master::setup_pins(){
 
 }
 
-void FDIR_Master::setCounterOne(int i){
+/*void FDIR_Master::setCounterOne(int i){
         if (i == 1) {
                 counter_first += i;
         }else if(i == 0) {
                 counter_first = 0;
         }
-}
+   }
 
-void FDIR_Master::setCounterTwo(int i){
+   void FDIR_Master::setCounterTwo(int i){
         if(i == 1) {
                 counter_second += i;
         }else if(i == 0) {
                 counter_second = 0;
         }
-}
+   }
 
-int FDIR_Master::getCounterOne(){
+   int FDIR_Master::getCounterOne(){
         return counter_first;
-}
+   }
 
-int FDIR_Master::getCounterTwo(){
+   int FDIR_Master::getCounterTwo(){
         return counter_second;
-}
+   }*/

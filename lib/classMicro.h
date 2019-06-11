@@ -25,15 +25,15 @@ extern unsigned long current1;
 
 class FDIR_Slave {
 private:
-
 FehlerCode FailureCode;
 String incomingMessage;
-
 int _resetLED, _sign, _powerOnOff, _licht, _address;
 
 public:
 bool resetStatus = false;
 ProblemStatus problemStatus;
+volatile int counter_first = 0;
+bool boardIsOkay = true;
 int ID[4];
 FDIR_Slave(int y, int z, int sensor, int id[4], int address);
 

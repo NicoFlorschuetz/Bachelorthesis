@@ -4,23 +4,25 @@
 #include "Arduino.h"
 #include <Wire.h>
 
+//reset pins for slaves
 typedef enum pins_arduino {
-
         RESET_ARDUINO1 = 10,
         RESET_ARDUINO2 =11,
-
 }pins_arduino_t;
 
+//interrupt pins for slave
 typedef enum InterruptPin {
         PIN_FIRST = 2,
         PIN_SECOND = 3,
 }interruptPin;
 
+//message for I2C to slave
 typedef enum MessageToSlave {
         NO_MSG = 0,
         RETURN_MSG = 1,
 }messageToSlave;
 
+//different reset modes of slaves
 typedef enum eFdirAction
 {
         STANDARD_FDIR = 0,
@@ -40,21 +42,29 @@ struct FdirAction : public Executable
 
         }
 };
+
+//struct which defines the structure of message
 struct Message {
         int id_board, failureCode, failureSolved, value;
 };
 
+//struct which defines the structure of first received setup_Message
 struct Setup_Message {
         int keepAlivePin, fdirActionParam;
         FDIR_ACTION_t fdirActions;
 };
 
+//defines FailureLevel
 struct FailureAnalysis {
         bool LevelNull = false;
         bool LevelOne = false;
         bool LevelTwo = false;
         bool LevelThree = false;
         bool LevelFour = false;
+};
+
+struct healtStatus {
+        bool health = true;
 };
 
 struct FailureHandler {
@@ -86,13 +96,15 @@ Protocol protocol;
 FailureAnalysis failureLevel;
 
 public:
-bool health = true;
+healtStatus healthstatus;
+
 FdirAction* fdirActions;
 Board() : id(0){
 }
 Board(int id) : protocol(){
         this->id = id;
         this->fdirActions = NULL;
+
 }
 
 void execute(void);
@@ -147,10 +159,10 @@ FDIR_Master();
 void setup_pins();
 void searchForAddresses();
 void doScheduling();
-void setCounterOne(int i);
-void setCounterTwo(int i);
-int getCounterOne();
-int getCounterTwo();
+/*void setCounterOne(int i);
+   void setCounterTwo(int i);
+   int getCounterOne();
+   int getCounterTwo();*/
 };
 
 
