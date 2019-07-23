@@ -27,21 +27,26 @@ class FDIR_Slave {
 private:
 FehlerCode FailureCode;
 String incomingMessage;
+volatile int counter_first = 0;
 int _resetLED, _sign, _powerOnOff, _licht, _address;
 
 public:
 bool resetStatus = false;
 ProblemStatus problemStatus;
-volatile int counter_first = 0;
+
 bool boardIsOkay = true;
 int ID[4];
 FDIR_Slave(int y, int z, int sensor, int id[4], int address);
 
 int getFailurecode();
-
+void setCounter(int);
+int getCounter();
 void board_setup();
-
 void sensor_reading();
+
+};
+
+class FDIR_Condition {
 
 };
 #endif

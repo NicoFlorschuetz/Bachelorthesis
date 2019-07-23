@@ -4,17 +4,6 @@
 #include "Arduino.h"
 #include <Wire.h>
 
-//reset pins for slaves
-typedef enum pins_arduino {
-        RESET_ARDUINO1 = 10,
-        RESET_ARDUINO2 =11,
-}pins_arduino_t;
-
-//interrupt pins for slave
-typedef enum InterruptPin {
-        PIN_FIRST = 2,
-        PIN_SECOND = 3,
-}interruptPin;
 
 //message for I2C to slave
 typedef enum MessageToSlave {
@@ -23,8 +12,7 @@ typedef enum MessageToSlave {
 }messageToSlave;
 
 //different reset modes of slaves
-typedef enum eFdirAction
-{
+typedef enum eFdirAction {
         STANDARD_FDIR = 0,
         WIRE_FDIR = 1
 }FDIR_ACTION_t;
@@ -35,11 +23,9 @@ struct Executable {
         }
 };
 
-struct FdirAction : public Executable
-{
+struct FdirAction : public Executable {
         virtual void reset(void) = 0;
         virtual ~FdirAction(){
-
         }
 };
 
@@ -63,7 +49,7 @@ struct FailureAnalysis {
         bool LevelFour = false;
 };
 
-struct healtStatus {
+struct healthStatus {
         bool health = true;
 };
 
@@ -96,7 +82,7 @@ Protocol protocol;
 FailureAnalysis failureLevel;
 
 public:
-healtStatus healthstatus;
+healthStatus healthstatus;
 
 FdirAction* fdirActions;
 Board() : id(0){
@@ -126,7 +112,8 @@ PinReset(int pin){
 }
 void execute(void);
 void reset(void);
-
+virtual ~PinReset() {
+}
 };
 
 class WireReset : public FdirAction {
@@ -159,13 +146,6 @@ FDIR_Master();
 void setup_pins();
 void searchForAddresses();
 void doScheduling();
-/*void setCounterOne(int i);
-   void setCounterTwo(int i);
-   int getCounterOne();
-   int getCounterTwo();*/
 };
-
-
-
 
 #endif

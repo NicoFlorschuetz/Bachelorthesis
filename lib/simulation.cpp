@@ -1,6 +1,4 @@
 #include <simulation.h>
-//#include "BoardClass.h"
-
 
 FDIR_Master::FDIR_Master(){
         setup_pins();
@@ -38,12 +36,10 @@ static Setup_Message Protocol::receiveSetup(){
 //get data via I2C
 void Protocol::readData(int id){
         Wire.requestFrom(id,7);
-        //delay(5);
         int x = 0;
         while(x<=Wire.available()) {
                 buffer[x] = Wire.read();
                 x++;
-
         }
 }
 
@@ -85,7 +81,6 @@ void Board::execute(void){
                         Serial.println(setup_Message.fdirActionParam);
                         this->fdirActions = FdirActionFactory::getFdirAction(setup_Message.fdirActions, setup_Message.keepAlivePin);
                 }
-        }else if (healthstatus.health == false) {
         }
 }
 
@@ -105,7 +100,6 @@ FailureAnalysis FailureHandler::detect(int id, Message message){
                 break;
         case 3:
                 fehlerAnalyse.LevelThree = true;
-
                 break;
         case 4:
                 fehlerAnalyse.LevelFour = true;
@@ -132,14 +126,11 @@ FdirAction* FdirActionFactory::getFdirAction(FDIR_ACTION_t fdirActions, int para
 }
 
 //shut down collapsed board
-void PinReset::execute(){
-        //digitalWrite(pin, HIGH);
+void PinReset::execute(void){
         digitalWrite(pin, LOW);
-
-        //digitalWrite(pin, HIGH);
 }
 
-void PinReset::reset(){
+void PinReset::reset(void){
 
         //not used
 }
@@ -182,8 +173,6 @@ void FDIR_Master::searchForAddresses(){
 void FDIR_Master::doScheduling(){
         for(int i = 0; i< anzahlBoards; i++)
         {
-                //LED zum blinken bringen, um zu überprüfen ob es noch was macht
-
                 schedule[i]->execute();
         }
 }
@@ -192,39 +181,9 @@ void FDIR_Master::doScheduling(){
 void FDIR_Master::setup_pins(){
         digitalWrite(40, LOW);
         digitalWrite(30, LOW);
-        digitalWrite(RESET_ARDUINO1, HIGH);
-        digitalWrite(RESET_ARDUINO2, HIGH);
-        pinMode(RESET_ARDUINO1, OUTPUT);
-        pinMode(RESET_ARDUINO2, OUTPUT);
-        pinMode(PIN_FIRST, INPUT);
-        pinMode(PIN_SECOND, INPUT);
         pinMode(40, OUTPUT);
         pinMode(30, OUTPUT);
         digitalWrite(40, LOW);
         digitalWrite(30, LOW);
 
 }
-
-/*void FDIR_Master::setCounterOne(int i){
-        if (i == 1) {
-                counter_first += i;
-        }else if(i == 0) {
-                counter_first = 0;
-        }
-   }
-
-   void FDIR_Master::setCounterTwo(int i){
-        if(i == 1) {
-                counter_second += i;
-        }else if(i == 0) {
-                counter_second = 0;
-        }
-   }
-
-   int FDIR_Master::getCounterOne(){
-        return counter_first;
-   }
-
-   int FDIR_Master::getCounterTwo(){
-        return counter_second;
-   }*/

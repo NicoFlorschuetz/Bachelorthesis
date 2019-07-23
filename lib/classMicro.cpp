@@ -30,15 +30,9 @@ void FDIR_Slave::board_setup(){
         digitalWrite(_powerOnOff, LOW);
 }
 
-
-int FDIR_Slave::getFailurecode(){
-        return FailureCode;
-}
-
 void FDIR_Slave::sensor_reading(){
         int reading = analogRead(A0);
         realValue = map(reading, 0, 1024, 0, 100);
-
         if (realValue >= 70 || boardIsOkay == false) {
                 current1 += 1;
                 if((current1 >= interval1 && problemStatus.Normal == false) || boardIsOkay == false) {
@@ -49,7 +43,6 @@ void FDIR_Slave::sensor_reading(){
                                 FailureCode = CODE_TWO;
                                 tryRestart++;
                         }
-
                 }else if (current1 >= interval2) {
                         problemStatus.Normal = false;
                         FailureCode = CODE_ONE;
@@ -62,14 +55,27 @@ void FDIR_Slave::sensor_reading(){
                 digitalWrite(_licht, HIGH);
         }
         delay(5);
-        //Serial.println(realValue);
-
         if ( resetStatus == true || boardIsOkay == false) {
                 digitalWrite(_resetLED, HIGH);
                 digitalWrite(_resetLED, LOW);
                 delay(500);
                 resetStatus = false;
-                //digitalWrite(_licht, HIGH);
         }
 
+}
+
+int FDIR_Slave::getFailurecode(){
+        return FailureCode;
+}
+
+void FDIR_Slave::setCounter(int i){
+        if (i == 1) {
+                counter_first += i;
+        }else if(i == 0) {
+                counter_first = 0;
+        }
+}
+
+int FDIR_Slave::getCounter(){
+        return counter_first;
 }

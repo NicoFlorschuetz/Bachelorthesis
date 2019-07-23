@@ -2,11 +2,6 @@
 #include "classMicro.h"
 #include "TimerOne.h"
 
-volatile unsigned int counter= 0;
-
-
-int command = 0;
-
 #define TARGET2
 #ifdef TARGET1
 //Id aufbau: ID[0] = Arduino id; ID[1]= fehler oder nicht ; ID[2] = fehler status
@@ -33,25 +28,19 @@ void setup() {
 
 //send keep alive over pin 4
 void keep_alive(){
-        if(Arduino1.counter_first >=1 && Arduino1.counter_first <=3) {
+        if(Arduino1.getCounter() >=1 && Arduino1.getCounter() <=3) {
                 Arduino1.boardIsOkay = true;
         }else{
                 Arduino1.boardIsOkay = false;
         }
-        setCounter(0);
+        Arduino1.setCounter(0);
 }
 
 void counterFirst(int pin){
-        setCounter(1);
+        Arduino1.setCounter(1);
 }
 
-void setCounter(int i){
-        if (i == 1) {
-                Arduino1.counter_first += i;
-        }else if(i == 0) {
-                Arduino1.counter_first = 0;
-        }
-}
+
 
 void loop() {
         //wait on signal at pin 2
@@ -78,19 +67,10 @@ void requestEvent()
                         Arduino1.ID[2] = 0;
                         Arduino1.ID[3] = 0;
                 }
-                /*Serial.print(Arduino1.ID[0]);
-                   Serial.print(Arduino1.ID[1]);
-                   Serial.print(Arduino1.ID[2]);
-                   Serial.println(Arduino1.ID[3]);*/
                 for (int x = 0; x < sizeof(Arduino1.ID)/sizeof(Arduino1.ID[0]); x++) {
                         Wire.write(Arduino1.ID[x]);
                 }
         }else if (Arduino1.ID[0] == 0) {
-
-                Serial.print(Arduino1.ID[0]);
-                Serial.print(Arduino1.ID[1]);
-                Serial.print(Arduino1.ID[2]);
-                Serial.println(Arduino1.ID[3]);
                 for (int x = 0; x < sizeof(Arduino1.ID)/sizeof(Arduino1.ID[0]); x++) {
                         Wire.write(Arduino1.ID[x]);
                 }
